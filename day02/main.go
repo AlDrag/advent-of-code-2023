@@ -10,10 +10,6 @@ import (
 	"unicode"
 )
 
-const blueCount = 14
-const redCount = 12
-const greenCount = 13
-
 func main() {
 	file, _ := os.Open("input.txt")
 	defer file.Close()
@@ -25,13 +21,10 @@ func main() {
 		line := fileScanner.Text()
 		// Scan for game id.
 		gameId := getGameId(line)
-		totalBlue, totalRed, totalGreen := getBlockColourTotals(line)
+		maxBlue, maxRed, maxGreen := getBlockColoursMaxCount(line)
 
-		fmt.Printf("Game ID: %d, Total Blue: %d, Total Red: %d, Total Green: %d\n", gameId, totalBlue, totalRed, totalGreen)
-
-		if totalBlue <= blueCount && totalRed <= redCount && totalGreen <= greenCount {
-			gameIdSum += gameId
-		}
+		fmt.Printf("Game ID: %d, Max Blue: %d, Max Red: %d, Max Green: %d\n", gameId, maxBlue, maxRed, maxGreen)
+		gameIdSum += maxBlue * maxRed * maxGreen
 	}
 
 	fmt.Printf("Total Sum: %d\n", gameIdSum)
@@ -54,7 +47,7 @@ func getGameId(text string) int {
 	return combineDigits(idSlice)
 }
 
-func getBlockColourTotals(text string) (blue int, red int, green int) {
+func getBlockColoursMaxCount(text string) (blue int, red int, green int) {
 	// Start index after Game ID, e.g. "Game 12: "
 	var i = strings.Index(text, ":") + 2
 	for true {
