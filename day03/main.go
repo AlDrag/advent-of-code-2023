@@ -145,7 +145,7 @@ func scanNumber(runes []rune, startingIndex int) (number int, leftIndexScanned i
 	leftIndex := startingIndex
 	rightIndex := startingIndex
 
-	for leftIndex-1 > 0 {
+	for leftIndex-1 >= 0 {
 		r = runes[leftIndex-1]
 		if !unicode.IsNumber(r) {
 			break
