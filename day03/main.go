@@ -37,15 +37,11 @@ func main() {
 		matrix[2] = append(matrix[2], r)
 	}
 
-	validNumbers := scanValidNumbers(line, matrix)
+	sum += scanGearRatioSum(line, matrix)
 
-	for _, n := range validNumbers {
-		sum += n
-	}
+	fmt.Printf("Line: %d, %v\n", 1, sum)
 
-	fmt.Printf("Line: %d, %v\n", 1, validNumbers)
-
-	var i = 0
+	var i = 2
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
 		// Move matrix to the next line
@@ -57,13 +53,9 @@ func main() {
 		}
 
 		resetMatrixWindow()
-		validNumbers = scanValidNumbers(line, matrix)
+		sum += scanGearRatioSum(line, matrix)
 
-		for _, n := range validNumbers {
-			sum += n
-		}
-
-		fmt.Printf("Line: %d, %v\n", i+1, validNumbers)
+		fmt.Printf("Line: %d, %v\n", i, sum)
 		i++
 	}
 
@@ -75,48 +67,26 @@ func main() {
 	}
 
 	resetMatrixWindow()
-	validNumbers = scanValidNumbers(line, matrix)
+	sum += scanGearRatioSum(line, matrix)
 
-	for _, n := range validNumbers {
-		sum += n
-	}
-
-	fmt.Printf("Line: %v\n", validNumbers)
+	fmt.Printf("Line: %v\n", sum)
 	fmt.Printf("Sum: %d\n", sum)
 }
 
-func scanValidNumbers(text string, matrix [3][]rune) []int {
-	var validNumbers = []int{}
+func scanGearRatioSum(text string, matrix [3][]rune) int {
+	var gearRatioSum = 0
 	var i = 0
 	for i < len(text) {
 		var symbol = matrix[1][i]
-		if unicode.IsNumber(symbol) {
-			var isValidPart = false
-			var j = i
-			for true && j < len(matrix[1]) {
-				if unicode.IsNumber(matrix[1][j]) {
-					if !isValidPart && hasCollision(matrix) {
-						isValidPart = true
-					}
-					j++
-					moveMatrixWindow(j)
-				} else {
-					break
-				}
-			}
-			if isValidPart {
-				var number, _ = strconv.Atoi(string(matrix[1][i:j]))
-				validNumbers = append(validNumbers, number)
-			}
-			// Move index after the whole number
-			i = j + 1
-		} else {
-			i++
+		if symbol == '*' {
+			gearRatioSum += getGearRatio(matrix)
 		}
+
+		i++
 
 		moveMatrixWindow(i)
 	}
-	return validNumbers
+	return gearRatioSum
 }
 
 func moveMatrixWindow(center int) {
@@ -141,18 +111,57 @@ func resetMatrixWindow() {
 	}
 }
 
-func hasCollision(matrix [3][]rune) bool {
+func getGearRatio(matrix [3][]rune) (ratio int) {
+	var ratios []int
 	for i, row := range matrixWindow {
+		var leftIndexScanned int
+		var rightIndexScanned int
 		for _, j := range row {
-			if j < 0 || j >= len(matrix[i]) {
+			if j < 0 || j >= len(matrix[i]) || (j >= leftIndexScanned && j <= rightIndexScanned) {
 				continue
 			}
 			r := matrix[i][j]
-			if r != '.' && !unicode.IsNumber(r) {
-				return true
+			if unicode.IsNumber(r) {
+				var ratio = 0
+				ratio, leftIndexScanned, rightIndexScanned = scanNumber(matrix[i], j)
+				ratios = append(ratios, ratio)
 			}
 		}
 	}
 
-	return false
+	if len(ratios) == 2 {
+		ratio = ratios[0] * ratios[1]
+	} else {
+		ratio = 0
+	}
+
+	fmt.Printf("Gear Ratio: %d\n", ratio)
+
+	return
+}
+
+func scanNumber(runes []rune, startingIndex int) (number int, leftIndexScanned int, rightIndexScanned int) {
+	var r rune
+	leftIndex := startingIndex
+	rightIndex := startingIndex
+
+	for leftIndex-1 > 0 {
+		r = runes[leftIndex-1]
+		if !unicode.IsNumber(r) {
+			break
+		}
+		leftIndex--
+	}
+
+	for rightIndex+1 < len(runes) {
+		r = runes[rightIndex+1]
+		if !unicode.IsNumber(r) {
+			break
+		}
+		rightIndex++
+	}
+
+	number, _ = strconv.Atoi(string(runes[leftIndex : rightIndex+1]))
+	fmt.Printf("Scanned Runes: %d\n", number)
+	return number, leftIndex, rightIndex
 }
