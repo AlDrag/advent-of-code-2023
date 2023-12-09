@@ -9,27 +9,48 @@ import (
 	"strings"
 )
 
+var cards = make(map[int]int)
+
 func main() {
 	file, _ := os.Open("input.txt")
 	defer file.Close()
 	fileScanner := bufio.NewScanner(file)
 	fileScanner.Split(bufio.ScanLines)
 
-	totalScore := 0
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
-		id := line[4:8]
-		fmt.Printf("Line #: %s\n", id)
+		id, _ := strconv.Atoi(strings.Fields(line[4:8])[0])
+		fmt.Printf("Line #: %d\n", id)
 		winningNumbersString := strings.Trim(line[9:39], "")
 		chosenNumbersString := strings.Trim(line[42:], "")
 
 		winningNumbers := mapToInt(strings.Fields(winningNumbersString))
 		chosenNumbers := mapToInt(strings.Fields(chosenNumbersString))
 
-		totalScore += calculateScore(winningNumbers, chosenNumbers)
+		if _, ok := cards[id]; ok {
+			cards[id] += 1
+		} else {
+			cards[id] = 1
+		}
+
+		total := calculateNumbers(winningNumbers, chosenNumbers)
+		fmt.Printf("Total: %d\n", total)
+
+		for i := 1; i <= total; i++ {
+			if _, ok := cards[i+id]; ok {
+				cards[i+id] += cards[id]
+			} else {
+				cards[i+id] = cards[id]
+			}
+		}
 	}
 
-	fmt.Printf("Total Score: %d\n", totalScore)
+	totalCards := 0
+	for _, t := range cards {
+		totalCards += t
+	}
+
+	fmt.Printf("Total Cards: %d\n", totalCards)
 }
 
 func mapToInt(slice []string) []int {
@@ -43,16 +64,13 @@ func mapToInt(slice []string) []int {
 	return numbers
 }
 
-func calculateScore(winningNumbers []int, chosenNumbers []int) int {
-	score := 0
+func calculateNumbers(winningNumbers []int, chosenNumbers []int) int {
+	count := 0
 	for _, n := range chosenNumbers {
 		if slices.Contains(winningNumbers, n) {
-			if score == 0 {
-				score = 1
-			} else {
-				score += score
-			}
+			count++
 		}
 	}
-	return score
+
+	return count
 }
