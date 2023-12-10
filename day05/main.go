@@ -21,8 +21,6 @@ func main() {
 
 	seeds := mapToInt(strings.Fields(string(sections[0][0][7:])))
 
-	fmt.Printf("Seeds: %v\n", seeds)
-
 	seedToSoil := getListOfIntsFromSection(sections[1])
 	soilToFertilizer := getListOfIntsFromSection(sections[2])
 	fertilizerToWater := getListOfIntsFromSection(sections[3])
@@ -40,24 +38,17 @@ func main() {
 	seedMaps[5] = temperatureToHumidity
 	seedMaps[6] = humidityToLocation
 
-	locations := make([]int, len(seeds))
-	for i, s := range seeds {
-		for _, seedMap := range seedMaps {
-			for _, row := range seedMap {
-				if s >= row[1] && s <= row[1]+row[2] {
-					s = row[0] + (s - row[1])
-					break
-				}
+	minLocation := math.MaxInt
+	seedsLength := len(seeds)
+	for i := 0; i < seedsLength; i += 2 {
+		s := seeds[i]
+		sRange := seeds[i] + seeds[i+1]
+		for j := s; j < sRange; j++ {
+			location := findLocation(j, seedMaps)
+			if location < minLocation {
+				minLocation = location
 			}
 		}
-
-		locations[i] = s
-		fmt.Printf("Seed is: %d\n", s)
-	}
-
-	minLocation := float64(locations[0])
-	for _, v := range locations {
-		minLocation = math.Min(float64(minLocation), float64(v))
 	}
 
 	fmt.Printf("Minimum Location: %d\n", int(minLocation))
@@ -104,4 +95,17 @@ func mapToInt(slice []string) []int {
 		i++
 	}
 	return numbers
+}
+
+func findLocation(s int, seedMaps [][][]int) int {
+	for _, seedMap := range seedMaps {
+		for _, row := range seedMap {
+			if s >= row[1] && s < row[1]+row[2] {
+				s = row[0] + (s - row[1])
+				break
+			}
+		}
+	}
+
+	return s
 }
